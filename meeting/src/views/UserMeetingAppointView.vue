@@ -2,7 +2,7 @@
     <div class="homeWrap">
         <el-container style="height: 100%; border: 1px solid #eee">
             <el-aside width="16%" style="background-color: rgb(238, 241, 246)">
-                <admin-side-components></admin-side-components>
+                <user-side></user-side>
             </el-aside>
             <el-container>
                 <el-header style="text-align: right; font-size: 12px; height: 55px; background-color: rgb(238, 241, 246); ">
@@ -137,11 +137,9 @@
 </template>
 
 <script>
-import AdminSideComponents from '@/components/AdminSideComponents.vue';
     import {request} from '../network/requst'
     // let appointId;
   export default {
-  components: { AdminSideComponents },
     data() {
       return {
         offset:"",

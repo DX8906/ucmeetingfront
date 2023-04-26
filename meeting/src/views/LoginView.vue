@@ -18,6 +18,10 @@
 </template>
 
 <script>
+import {
+  Loading
+} from 'element-ui'
+import {request} from '../network/requst'
 export default {
 // eslint-disable-next-line
 name: "Login",
@@ -28,22 +32,48 @@ name: "Login",
             password:"",
         },
         rules:{
-            username:[{required:true,message:"请输入用户名",trigger:"blur"},{ min: 5, max: 14, message: '长度在 5 到 14 个字符', trigger: 'blur' }
+            username:[{required:true,message:"请输入用户名",trigger:"blur"},{ min: 6, max: 14, message: '长度在 6 到 14 个字符', trigger: 'blur' }
             ],
-            password:[{required:true,message:"请输入密码",trigger:"blur"},{ min: 6,  message: '密码长度要大于6', trigger: 'blur' }],
+            password:[{required:true,message:"请输入密码",trigger:"blur"},{ min: 6, max:14,  message: '长度在 6 到 14 个字符', trigger: 'blur' }],
         }
     }
 },
   methods:{
-    submitLogin(){
-        this.$refs.loginForm.validate((valid) => {
-            if (valid) {
-                alert('提交成功');
-            } else {
-                this.$message.error('登录出错请重新输入');
-                return false;
-            }
-        });
+    submitLogin() {
+      const loading = Loading.service({ fullscreen: true })
+      request({
+        method: 'post',
+        url: '/users/login',
+        data: {
+          'username': this.loginForm.username,
+          'password': this.loginForm.password,
+        }
+      }).then(res => {
+        if(res.data.code===1){
+          loading.close()
+          // 登录成功将用户 uid 存入 localStorage
+          localStorage.setItem('token', res.data.data)
+          //data.data.normal_login_token为发送Ajax获取到的token信息
+          var strings = res.data.data.split(".");//通过split()方法将token转为字符串数组
+          //取strings[1]数组中的第二个字符进行解析
+          var userinfo = JSON.parse(decodeURIComponent(escape(window.atob(strings[1].replace(/-/g, "+").replace(/_/g, "/"))))); 
+          //然后可以拿到解析后的数据，可以console.log()打印下，
+          // alert(userinfo.permission);
+          // alert(userinfo.permission!="管理员"&&userinfo.permission!="超级管理员");
+          if(userinfo.permission!="管理员"&&userinfo.permission!="超级管理员"){
+            this.$router.push('/userMeetingAppoint')
+          }else{
+            this.$router.push('/meetingAppoint')
+          }
+          // var accountId = userinfo.accountId;
+          this.$message({
+              message:'登录成功',
+              type:'success'
+          });
+        }
+      }).catch(err => {
+        console.log(err)
+      })
     }
   }
 };

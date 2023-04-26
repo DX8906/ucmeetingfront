@@ -24,5 +24,10 @@ export default {
 
 </script>
 <style>
-
+  .el-dialog {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0px !important;
+  }
 </style>

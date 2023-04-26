@@ -2,39 +2,10 @@
     <div class="homeWrap">
         <el-container style="height: 100%; border: 1px solid #eee">
             <el-aside width="16%" style="background-color: rgb(238, 241, 246)">
-                <el-menu>
-                <el-container style="height: 75px;">
-                    <div class="title"><b>UC Meeting</b></div>
-                </el-container>
-                <el-submenu index="1">
-                    <template slot="title"><i class="el-icon-message"></i>会议管理</template>
-                    <el-menu-item-group>
-                    <el-menu-item index="1-1">
-                        <router-link to="/meetingAppoint" class="router">会议预约</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="1-2">
-                        <router-link to="/meetingList" class="router">会议列表</router-link>
-                    </el-menu-item>
-                    </el-menu-item-group>
-                </el-submenu>
-                <el-submenu index="2">
-                    <template slot="title"><i class="el-icon-menu"></i>系统管理</template>
-                    <el-menu-item-group>
-                    <el-menu-item index="2-1">
-                        <router-link to="/userList" class="router">用户管理</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="2-2">
-                        <router-link to="/meetingRoomList" class="router">会议室管理</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="2-3">
-                        <router-link to="/departmentList" class="router">部门管理</router-link>
-                    </el-menu-item>
-                    </el-menu-item-group>
-                </el-submenu>
-                </el-menu>
+                <admin-side></admin-side>
             </el-aside>
             <el-container>
-                <el-header style="text-align: right; font-size: 12px; height: 75px; background-color: rgb(238, 241, 246); ">
+                <el-header style="text-align: right; font-size: 12px; height: 55px; background-color: rgb(238, 241, 246); ">
                 <el-dropdown>
                     <i class="el-icon-setting" style="margin-right: 15px"></i>
                     <el-dropdown-menu slot="dropdown">
@@ -76,17 +47,20 @@
                         </el-table-column>
                         <el-table-column label="操作">
                             <template slot-scope="scope">
-                                <el-button
-                                size="mini"
-                                @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                                <el-button
-                                size="mini"
-                                type="danger"
-                                @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-                                <el-button
-                                size="mini"
-                                type="danger"
-                                @click="handleResetPassword(scope.$index, scope.row)">重置密码</el-button>
+                                <span v-if="tableData[scope.$index].possessPermissions===1">
+                                        <el-button
+                                        size="mini"
+                                        @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                                        <el-button
+                                        size="mini"
+                                        type="danger"
+                                        @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                                        <el-button
+                                        size="mini"
+                                        type="danger"
+                                        @click="handleResetPassword(scope.$index, scope.row)">重置密码</el-button>
+                                </span>
+                                <span v-else>无操作权限</span>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -110,13 +84,28 @@
                                 <el-input v-model="updateForm.name" auto-complete="off"></el-input>
                                 </el-form-item>
                                 <el-form-item label="用户权限" :label-width="formLabelWidth">
-                                <el-input v-model="updateForm.permission" auto-complete="off"></el-input>
+                                    <el-select v-model="updateForm.permission" placeholder="请选择">
+                                        <el-option
+                                            v-for="item in permissionOptions"
+                                            :key="item.value"
+                                            :label="item.label"
+                                            :value="item.value">
+                                        </el-option>
+                                    </el-select>
                                 </el-form-item>
+
                                 <el-form-item label="联系方式" :label-width="formLabelWidth">
                                 <el-input v-model="updateForm.telephone" auto-complete="off"></el-input>
                                 </el-form-item>
                                 <el-form-item label="所在部门" :label-width="formLabelWidth">
-                                <el-input v-model="updateForm.deptName" auto-complete="off"></el-input>
+                                    <el-select v-model="updateForm.deptName" placeholder="请选择" @focus="getDeptChoiceList()">
+                                        <el-option
+                                            v-for="item in deptOptions"
+                                            :key="item"
+                                            :label="item"
+                                            :value="item">
+                                        </el-option>
+                                    </el-select>
                                 </el-form-item>
                             </el-form>
                             
@@ -137,16 +126,29 @@
                             <el-input v-model="addForm.name" auto-complete="off"></el-input>
                             </el-form-item>
                             <el-form-item label="用户权限" :label-width="formLabelWidth">
-                            <el-input v-model="addForm.permission" auto-complete="off"></el-input>
-                            </el-form-item>
+                                    <el-select v-model="addForm.permission" placeholder="请选择">
+                                        <el-option
+                                            v-for="item in permissionOptions"
+                                            :key="item.value"
+                                            :label="item.label"
+                                            :value="item.value">
+                                        </el-option>
+                                    </el-select>
+                                </el-form-item>
                             <el-form-item label="联系方式" :label-width="formLabelWidth">
                             <el-input v-model="addForm.telephone" auto-complete="off"></el-input>
                             </el-form-item>
                             <el-form-item label="所在部门" :label-width="formLabelWidth">
-                            <el-input v-model="addForm.deptName" auto-complete="off"></el-input>
-                            </el-form-item>
+                                    <el-select v-model="addForm.deptName" placeholder="请选择" @focus="getDeptChoiceList()">
+                                        <el-option
+                                            v-for="item in deptOptions"
+                                            :key="item"
+                                            :label="item"
+                                            :value="item">
+                                        </el-option>
+                                    </el-select>
+                                </el-form-item>
                         </el-form>
-                        
                         <div slot="footer" class="dialog-footer">
                             <el-button @click="addDialogFormVisible = false">取 消</el-button>
                             <el-button type="primary" @click="sendAdd()">确 定</el-button>
@@ -158,16 +160,19 @@
     </div>
 </template>
 <script>
-    import axios from 'axios'
-    const instance = axios.create({
-        //这里可以抽取公有配置 
-        baseURL:'http://localhost:8080'
-    })
+    import {request} from '../network/requst'
     let updateId;
-// import axios from 'axios';
   export default {
     data() {
       return {
+        permissionOptions: [{
+          value: '管理员',
+          label: '管理员'
+        }, {
+          value: '普通用户',
+          label: '普通用户'
+        }],
+        deptOptions:[],
         pageform:{
             total:10,
             currentPage:1,
@@ -200,6 +205,15 @@
       }
     },
     methods: {
+        getDeptChoiceList:function(){
+            request({
+                url:'/depts/select',
+            }).then(res => {
+                this.deptOptions=res.data.data;
+            }).catch((err) => {
+                alert(err);
+            })
+        },
         onSearch:function(){
             this.pageform.currentPage=1;
             this.getTableData(this.userSearchForm.name,this.userSearchForm.dept)
@@ -215,21 +229,27 @@
             type: 'warning'
             }).then(() => {
                 let resetId = this.tableData[index].id;
-            instance.put('/users/' + `${resetId}`).then(
-                (result) => {
-                    console.log(result);
-                    if (result.data.code === 1) {
-                        this.$message.info('重置成功，新密码为123456');   
+                request({
+                    url:'/users/'+resetId,
+                    method:'put',
+                }).then(res => {
+                    if (res.data.code === 1) {
+                        this.$message({
+                            type: 'success',
+                            message: '重置成功，新密码为123456!'
+                        })
                     }
-                }
-            );
+                }).catch((err) => {
+                    alert(err);
+                })
+                console.log(index, row);
             console.log(index, row);
             }).catch(() => {
                 this.$message.info('已取消重置');          
             });
         },
         sendAdd:function(){
-            instance({
+            request({
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json'
@@ -250,7 +270,7 @@
             this.addDialogFormVisible=true;
         },
         sendUpdate:function(){
-            instance({
+            request({
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json'
@@ -264,11 +284,13 @@
                     if (result.data.code === 1) {
                         this.getTableData();
                     }
+                }).catch((err) =>{
+                    alert(err);
                 }),
             this.updateDialogFormVisible = false;
         },
         getTableData: function(name,deptName){
-            instance({
+            request({
                 url:'/users',
                 params:{
                     page:this.pageform.currentPage,
@@ -296,14 +318,21 @@
             type: 'warning'
             }).then(() => {
                 let deleteId = this.tableData[index].id;
-            instance.delete('/users/' + `${deleteId}`).then(
-                (result) => {
-                    console.log(result);
-                    if (result.data.code === 1) {
+                request({
+                    url:'/users/'+deleteId,
+                    method:'delete',
+                }).then(res => {
+                    if (res.data.code === 1) {
                         this.getTableData();
+                        this.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        })
                     }
-                }
-            );
+                }).catch((err) => {
+                    alert(err);
+                })
+                console.log(index, row);
             console.log(index, row);
             }).catch(() => {
                 this.$message.info('已取消删除');          

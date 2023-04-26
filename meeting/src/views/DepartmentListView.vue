@@ -2,47 +2,11 @@
     <div class="homeWrap">
         <el-container style="height: 100%; border: 1px solid #eee">
             <el-aside width="16%" style="background-color: rgb(238, 241, 246)">
-                <el-menu>
-                <el-container style="height: 75px;">
-                    <div class="title"><b>UC Meeting</b></div>
-                </el-container>
-                <el-submenu index="1">
-                    <template slot="title"><i class="el-icon-message"></i>会议管理</template>
-                    <el-menu-item-group>
-                    <el-menu-item index="1-1">
-                        <router-link to="/meetingAppoint" class="router">会议预约</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="1-2">
-                        <router-link to="/meetingList" class="router">会议列表</router-link>
-                    </el-menu-item>
-                    </el-menu-item-group>
-                </el-submenu>
-                <el-submenu index="2">
-                    <template slot="title"><i class="el-icon-menu"></i>系统管理</template>
-                    <el-menu-item-group>
-                    <el-menu-item index="2-1">
-                        <router-link to="/userList" class="router">用户管理</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="2-2">
-                        <router-link to="/meetingRoomList" class="router">会议室管理</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="2-3">
-                        <router-link to="/departmentList" class="router">部门管理</router-link>
-                    </el-menu-item>
-                    </el-menu-item-group>
-                </el-submenu>
-                </el-menu>
+                <admin-side-components></admin-side-components>
             </el-aside>
             <el-container>
-                <el-header style="text-align: right; font-size: 12px; height: 75px; background-color: rgb(238, 241, 246); ">
-                <el-dropdown>
-                    <i class="el-icon-setting" style="margin-right: 15px"></i>
-                    <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item>注销</el-dropdown-item>
-                    <el-dropdown-item>修改密码</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-                <span>欢迎使用</span>
+                <el-header style="text-align: right; font-size: 12px; height: 55px; background-color: rgb(238, 241, 246); ">
+                    <all-head></all-head>
                 </el-header>
                 
                 <el-main>
@@ -82,7 +46,6 @@
                         </el-table-column>
                     </el-table>
 
-                    <!-- <el-button type="text" @click="dialogFormVisible = true">打开嵌套表单的 Dialog</el-button> -->
                     <el-dialog title="部门信息更改" :visible.sync="dialogFormVisible" style="width: 800px;margin: auto;">
                     <el-form :model="updateForm">
                         <el-form-item label="部门id" :label-width="formLabelWidth">
@@ -105,14 +68,12 @@
 </template>
 
 <script>
-    import axios from 'axios'
-    const instance = axios.create({
-        //这里可以抽取公有配置 
-        baseURL:'http://localhost:8080'
-    })
+import AdminSideComponents from '@/components/AdminSideComponents.vue';
+    import {request} from '../network/requst'
     let updateId;
 
 export default {
+  components: { AdminSideComponents },
     data() {
       return {
         tableData: [],
@@ -130,7 +91,7 @@ export default {
     },
     methods: {
         sendAdd:function(){
-            instance({
+            request({
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json'
@@ -151,7 +112,7 @@ export default {
             this.updateDialogFormVisible=true;
         },
         handleUpdate:function(){
-            instance({
+            request({
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json'
@@ -169,7 +130,7 @@ export default {
             this.dialogFormVisible = false;
         },
         getTableData: function(){
-            instance({
+            request({
                 url:'/depts'
             }).then(res => {
                 this.tableData=res.data.data;
@@ -190,14 +151,21 @@ export default {
             type: 'warning'
             }).then(() => {
                 let deleteId = this.tableData[index].id;
-            instance.delete('/depts/' + `${deleteId}`).then(
-                (result) => {
-                    console.log(result);
-                    if (result.data.code === 1) {
+                request({
+                url:'/depts/'+deleteId,
+                method:'delete',
+                }).then(res => {
+                    if (res.data.code === 1) {
                         this.getTableData();
+                        this.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        })
                     }
-                }
-            );
+                }).catch((err) => {
+                    alert(err);
+                })
+                console.log(index, row);
             console.log(index, row);
             }).catch(() => {
                 this.$message.info('已取消删除');          

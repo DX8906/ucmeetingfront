@@ -2,66 +2,17 @@
     <div class="homeWrap">
         <el-container style="height: 100%; border: 1px solid #eee">
             <el-aside width="16%" style="background-color: rgb(238, 241, 246)">
-                <el-menu>
-                <el-container style="height: 75px;">
-                    <div class="title"><b>UC Meeting</b></div>
-                </el-container>
-                <el-submenu index="1">
-                    <template slot="title"><i class="el-icon-message"></i>会议管理</template>
-                    <el-menu-item-group>
-                    <el-menu-item index="1-1">
-                        <router-link to="/meetingAppoint" class="router">会议预约</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="1-2">
-                        <router-link to="/meetingList" class="router">会议列表</router-link>
-                    </el-menu-item>
-                    </el-menu-item-group>
-                </el-submenu>
-                <el-submenu index="2">
-                    <template slot="title"><i class="el-icon-menu"></i>系统管理</template>
-                    <el-menu-item-group>
-                    <el-menu-item index="2-1">
-                        <router-link to="/userList" class="router">用户管理</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="2-2">
-                        <router-link to="/meetingRoomList" class="router">会议室管理</router-link>
-                    </el-menu-item>
-                    <el-menu-item index="2-3">
-                        <router-link to="/departmentList" class="router">部门管理</router-link>
-                    </el-menu-item>
-                    </el-menu-item-group>
-                </el-submenu>
-                </el-menu>
+                <admin-side></admin-side>
             </el-aside>
             <el-container>
-                <el-header style="text-align: right; font-size: 12px; height: 75px; background-color: rgb(238, 241, 246); ">
-                <el-dropdown>
-                    <i class="el-icon-setting" style="margin-right: 15px"></i>
-                    <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item>注销</el-dropdown-item>
-                    <el-dropdown-item>修改密码</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-                <span>欢迎使用</span>
+                <el-header style="text-align: right; font-size: 12px; height: 55px; background-color: rgb(238, 241, 246); ">
+                    <all-head></all-head>
                 </el-header>
                 
                 <el-main>
                     
                     <el-form :inline="true" :model="meetingRoomSearchForm" class="search-form-inline" style="margin-top: 1%;margin-left: 0%;">
                         <el-button type="primary" @click="handleAdd()" style="width: 120px;margin-left: 0%;">+新增会议室</el-button>
-
-                        <!-- <el-form-item label="会议室名称" style="margin-left: 4%;">
-                            <el-input v-model="meetingRoomSearchForm.name" placeholder="会议室名称" style="width: 180px;"></el-input>
-                        </el-form-item>
-                        <el-form-item label="最少人数">
-                            <el-input v-model="meetingRoomSearchForm.minCapacity" placeholder="最小人数" style="width: 180px;"></el-input>
-                        </el-form-item>
-                        <el-form-item label="最大人数">
-                            <el-input v-model="meetingRoomSearchForm.maxCapacity" placeholder="最大人数" style="width: 180px;"></el-input>
-                        </el-form-item>
-                        <el-form-item>
-                            <el-button type="primary" @click="onSubmit" style="margin-left: 2%;">查询</el-button>
-                        </el-form-item> -->
                     </el-form>
 
 
@@ -134,11 +85,7 @@
 </template>
 
 <script>
-    import axios from 'axios'
-    const instance = axios.create({
-        //这里可以抽取公有配置 
-        baseURL:'http://localhost:8080'
-    })
+    import {request} from '../network/requst'
     let updateId;
 
 // import axios from 'axios';
@@ -146,11 +93,6 @@
     data() {
       return {
         tableData: [],
-        // meetingRoomSearchForm: {
-        //     name:"",
-        //     minCapacity:"",
-        //     maxCapacity:""
-        // },
         updateForm: {
             name: "",
             capacity:"",
@@ -168,7 +110,7 @@
     },
     methods: {
         sendAdd:function(){
-            instance({
+            request({
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json'
@@ -183,13 +125,13 @@
                         this.getTableData();
                     }
                 }),
-            this.updateDialogFormVisible = false;
+            this.addDialogFormVisible = false;
         },
         handleAdd:function(){
             this.addDialogFormVisible=true;
         },
         sendUpdate:function(){
-            instance({
+            request({
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json'
@@ -207,7 +149,7 @@
             this.updateDialogFormVisible = false;
         },
         getTableData: function(){
-            instance({
+            request({
                 url:'/meetingRooms'
             }).then(res => {
                 this.tableData=res.data.data;
@@ -228,15 +170,21 @@
             type: 'warning'
             }).then(() => {
                 let deleteId = this.tableData[index].id;
-            instance.delete('/meetingRooms/' + `${deleteId}`).then(
-                (result) => {
-                    console.log(result);
-                    if (result.data.code === 1) {
+                request({
+                url:'/meetingRooms/'+deleteId,
+                method:'delete',
+                }).then(res => {
+                    if (res.data.code === 1) {
                         this.getTableData();
+                        this.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        })
                     }
-                }
-            );
-            console.log(index, row);
+                }).catch((err) => {
+                    alert(err);
+                })
+                console.log(index, row);
             }).catch(() => {
                 this.$message.info('已取消删除');          
             });
